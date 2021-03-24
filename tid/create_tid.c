@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <pthread.h>
+#include <sys/syscall.h>
 
 void my_delay() //延时函数，通过多重循环达到延时目的
 {
@@ -14,8 +15,9 @@ void my_delay() //延时函数，通过多重循环达到延时目的
 void * thread_func(void * arg) //线程函数，功能是循环打印传入的字符串参数
 {
 	int i;
-	printf("thread_fun PID:%lu  TID:0x%lx\n", (unsigned long)getpid(), (unsigned long)pthread_self());
+	
 	for (i = 0; i < 10; i++) {
+		printf("thread_fun PID:%lu TID:0x%lx tid:%ld\n", (unsigned long)getpid(), (unsigned long)pthread_self(),syscall(SYS_gettid));
 		printf("%s\n", (char *)arg);
 		my_delay();
 	}
