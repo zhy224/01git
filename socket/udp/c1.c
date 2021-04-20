@@ -1,19 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
 #include <string.h>
-#include <netdb.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
 #include <arpa/inet.h>
-#define SERVPORT 12306
+#include <netdb.h>
+#include <error.h>
+#define SERVPORT 10086
+//#define SERADDE 192.168.1.173
 #define MAXDATASIZE 30
 int main(int argc,char *argv[])
 {
-    int sockfd,recvbytes;
+    int sockfd,n;
     char buf[MAXDATASIZE];
     struct hostent *host;
     struct sockaddr_in serv_addr;
@@ -27,26 +27,36 @@ int main(int argc,char *argv[])
         herror("gethostbyname error");
         exit(1);
     }
-    if((sockfd=socket(AF_INET,SOCK_STREAM,0))==-1)
+    if((sockfd=socket(AF_INET,SOCK_DGRAM,0))==-1)
     {
         perror("socket create error");
         exit(1);
     }
     serv_addr.sin_family=AF_INET;
     serv_addr.sin_port=htons(SERVPORT);
+    //inet_pton(AF_INET,SERVPORT,&serv_addr.sin_addr);
     serv_addr.sin_addr=*((struct in_addr *)host->h_addr);
     bzero(&(serv_addr.sin_zero),8);
-    if(connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(struct sockaddr))==-1)
+    sockfd=socket(AF_INET,SOCK_DGRAM,0);
+    if(sockfd==-1)
     {
-        perror("connect error");
+        perror("socket 出错");
         exit(1);
     }
-    if((recvbytes=recv(sockfd,buf,MAXDATASIZE,0))==-1)
+    while(1)
     {
-        perror("connect 出错");
-        exit(1);
+        scanf("%s",buf);
+        n=sendto(sockfd,buf,sizeof(buf),0,(struct sockaddr *)&serv_addr,sizeof(serv_addr));
+        if(n==-1)
+        {
+            printf("send error");
+        }
+        if(!strncmp(buf, "exit", 4))
+		{
+			break;
+		}
     }
-    buf[recvbytes]='\0';
     printf("收到:%s",buf);
     close(sockfd);
+    exit(0);
 }
